@@ -1,0 +1,43 @@
+# IntelliJ-specific files
+.idea/
+*.iml
+
+# Eclipse-specific files
+.settings/
+.classpath
+.project
+
+# VS Code-specific files
+.vscode/
+
+# Gradle-specific files
+.gradle/
+build/
+.gradletasknamecache
+/gradlew
+/gradlew.bat
+/gradle/wrapper/gradle-wrapper.jar
+
+# Compiled class files
+*.class
+
+# Generated files
+/bin/
+/out/
+
+# Log files
+*.log
+
+# Npm (if used)
+node_modules/
+.npm/
+
+# Maven (if used)
+target/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Database files
+*.db
