@@ -29,7 +29,7 @@ public class MainApplicationController {
 
     private void loadView(String fxmlFileName) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFileName));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/cesarbahena/bara/app/" + fxmlFileName));
             Node view = loader.load();
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
