@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 public class DatabaseManager {
 
-    private static final String DB_URL = "jdbc:sqlite:bara-app/bara.db";
+    private static final String DB_URL = "jdbc:sqlite:bara.db";
 
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL);
