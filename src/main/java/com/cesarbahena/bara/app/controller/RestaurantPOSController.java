@@ -1,61 +1,124 @@
 package com.cesarbahena.bara.app.controller;
 
+import com.cesarbahena.bara.app.BaraAppFX;
 import com.cesarbahena.bara.app.model.MenuItem;
 import com.cesarbahena.bara.app.model.OrderItem;
 import com.cesarbahena.bara.app.repository.MenuItemRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.TextAlignment;
 
+import java.io.IOException;
 import java.util.Optional;
 
 public class RestaurantPOSController {
 
+    // FXML fields from the SHELL (RestaurantPOSView.fxml)
     @FXML
-    private FlowPane menuFlowPane;
+    private StackPane mainContentArea;
+
+    // FXML fields from the dynamically loaded views (TakeOrderView.fxml, etc.)
+    // These are public so FXMLLoader can access them when the controller is set manually.
     @FXML
-    private TableView<OrderItem> orderTable;
+    public FlowPane menuFlowPane;
     @FXML
-    private TableColumn<OrderItem, String> orderItemNameColumn;
+    public TableView<OrderItem> orderTable;
     @FXML
-    private TableColumn<OrderItem, Integer> orderItemQuantityColumn;
+    public TableColumn<OrderItem, String> orderItemNameColumn;
     @FXML
-    private TableColumn<OrderItem, Double> orderItemPriceColumn;
+    public TableColumn<OrderItem, Integer> orderItemQuantityColumn;
     @FXML
-    private TableColumn<OrderItem, Double> orderItemTotalPriceColumn;
+    public TableColumn<OrderItem, Double> orderItemPriceColumn;
     @FXML
-    private TextArea itemNotesArea;
+    public TableColumn<OrderItem, Double> orderItemTotalPriceColumn;
     @FXML
-    private Label totalLabel;
+    public TextArea itemNotesArea;
+    @FXML
+    public Label totalLabel;
 
     private MenuItemRepository menuItemRepository;
     private ObservableList<OrderItem> currentOrder;
+    private boolean shellInitialized = false;
 
     @FXML
     public void initialize() {
+        // This guard is crucial to prevent the recursive loop.
+        if (shellInitialized) {
+            return;
+        }
+        shellInitialized = true;
+
         menuItemRepository = new MenuItemRepository();
         currentOrder = FXCollections.observableArrayList();
 
-        setupTable();
-        loadMenuItems();
-
-        orderTable.setItems(currentOrder);
-        orderTable.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldSelection, newSelection) -> showItemNotes(newSelection));
+        // Load the default view
+        showTakeOrderView();
     }
+
+    // --- View Navigation Methods ---
+
+    @FXML
+    public void showTakeOrderView() {
+        try {
+            FXMLLoader loader = new FXMLLoader(BaraAppFX.class.getResource("TakeOrderView.fxml"));
+            // Set this instance as the controller. This is crucial.
+            loader.setController(this);
+            Node takeOrderView = loader.load();
+
+            // The FXML is loaded, now we can use the injected fields from it.
+            // This setup logic is specific to the TakeOrderView.
+            setupTable();
+            orderTable.setItems(currentOrder);
+            orderTable.getSelectionModel().selectedItemProperty().addListener(
+                    (obs, oldSelection, newSelection) -> showItemNotes(newSelection));
+            loadMenuItems();
+            updateTotal(); // Ensure total is updated on first load
+
+            mainContentArea.getChildren().setAll(takeOrderView);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error Crítico", "No se pudo cargar la vista de Punto de Venta.");
+        }
+    }
+
+    @FXML
+    public void showMenuManagementView() {
+        loadView("MenuManagementView.fxml");
+    }
+
+    private void loadView(String fxmlFileName) {
+        try {
+            FXMLLoader loader = new FXMLLoader(BaraAppFX.class.getResource(fxmlFileName));
+            Node view = loader.load();
+            mainContentArea.getChildren().setAll(view);
+        } catch (IOException e) {
+            System.err.println("Error loading view: " + fxmlFileName + " - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    // --- Logic from the original POS controller ---
 
     private void setupTable() {
         orderItemNameColumn.setCellValueFactory(new PropertyValueFactory<>("menuItemName"));
         orderItemQuantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         orderItemPriceColumn.setCellValueFactory(new PropertyValueFactory<>("menuItemPrice"));
         orderItemTotalPriceColumn.setCellValueFactory(new PropertyValueFactory<>("totalPrice"));
+        orderTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     private void loadMenuItems() {
+        // Ensure menuFlowPane is not null, which can happen if the FXML isn't loaded yet.
+        if (menuFlowPane == null) return;
         menuFlowPane.getChildren().clear();
         for (MenuItem item : menuItemRepository.findAll()) {
             Button itemButton = createMenuItemButton(item);

@@ -11,9 +11,9 @@ public class BaraAppFX extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(BaraAppFX.class.getResource("MainApplicationView.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1200, 800); // Increased size for main application
-        stage.setTitle("BARA - TPV Restaurante");
+        FXMLLoader fxmlLoader = new FXMLLoader(BaraAppFX.class.getResource("RestaurantPOSView.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 1280, 800); // New default size for the shell UI
+        stage.setTitle("BARA - Punto de Venta");
         scene.getStylesheets().add(getClass().getResource("bara-theme.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
