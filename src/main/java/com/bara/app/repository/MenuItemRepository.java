@@ -1,7 +1,7 @@
-package com.cesarbahena.bara.app.repository;
+package com.bara.app.repository;
 
-import com.cesarbahena.bara.app.database.DatabaseManager;
-import com.cesarbahena.bara.app.model.MenuItem;
+import com.bara.app.database.DatabaseManager;
+import com.bara.app.model.MenuItem;
 
 import java.sql.*;
 import java.util.ArrayList;

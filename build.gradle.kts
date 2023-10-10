@@ -4,7 +4,7 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.0.13" // For JavaFX
 }
 
-group = "com.cesarbahena"
+group = "com.bara"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -22,7 +22,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass.set("com.cesarbahena.bara.app.App")
+    mainClass.set("com.bara.app.App")
 }
 
 java {

@@ -1,4 +1,4 @@
-package com.cesarbahena.bara.app.database;
+package com.bara.app.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

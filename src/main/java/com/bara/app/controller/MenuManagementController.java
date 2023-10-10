@@ -1,7 +1,7 @@
-package com.cesarbahena.bara.app.controller;
+package com.bara.app.controller;
 
-import com.cesarbahena.bara.app.model.MenuItem;
-import com.cesarbahena.bara.app.repository.MenuItemRepository;
+import com.bara.app.model.MenuItem;
+import com.bara.app.repository.MenuItemRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;

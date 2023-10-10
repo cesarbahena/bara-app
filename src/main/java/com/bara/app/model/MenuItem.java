@@ -1,4 +1,4 @@
-package com.cesarbahena.bara.app.model;
+package com.bara.app.model;
 
 import java.util.Objects;
 

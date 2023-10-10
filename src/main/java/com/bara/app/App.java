@@ -1,4 +1,4 @@
-package com.cesarbahena.bara.app;
+package com.bara.app;
 
 import javafx.application.Application;
 
