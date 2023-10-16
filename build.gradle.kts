@@ -104,7 +104,6 @@ tasks.register<Exec>("migrateFlyway") {
         sqlite3 bara.db < src/main/resources/db/migration/V4__create_customer_addresses.sql && \
         sqlite3 bara.db < src/main/resources/db/migration/V5__create_orders.sql && \
         sqlite3 bara.db < src/main/resources/db/migration/V6__create_unidentified_customer_clusters.sql && \
-        sqlite3 bara.db < src/main/resources/db/migration/V7__create_customer_alternate_names.sql && \
         echo 'Migrations applied successfully'
     """.trimIndent())
 }
