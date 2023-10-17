@@ -1,100 +1,92 @@
 package com.bara.app.repository;
 
-import com.bara.app.database.DatabaseManager;
-import com.bara.app.model.MenuItem;
+import com.bara.app.db.jooq.tables.pojos.MenuItems;
+import com.bara.app.db.jooq.tables.records.MenuItemsRecord;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
+
+import static com.bara.app.db.jooq.Tables.MENU_ITEMS;
 
 public class MenuItemRepository {
 
-    public MenuItemRepository() {
-        DatabaseManager.initializeDatabase();
+    private static final DateTimeFormatter SQLITE_DATETIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    public MenuItems create(Connection conn, MenuItems item) {
+        DSLContext dsl = DSL.using(conn);
+        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+
+        MenuItemsRecord record = dsl.newRecord(MENU_ITEMS);
+        record.setName(item.getName());
+        record.setDescription(item.getDescription());
+        record.setPrice(item.getPrice());
+        record.setIsAvailable(item.getIsAvailable() != null ? item.getIsAvailable() : 1);
+        record.setCreatedAt(now);
+        record.setUpdatedAt(now);
+
+        record.store();
+        return record.into(MenuItems.class);
     }
 
-    public void save(MenuItem menuItem) {
-        String sql = "INSERT INTO menu_items(name, price, description) VALUES(?, ?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, menuItem.getName());
-            pstmt.setDouble(2, menuItem.getPrice());
-            pstmt.setString(3, menuItem.getDescription());
-            pstmt.executeUpdate();
+    public MenuItems update(Connection conn, MenuItems item) {
+        DSLContext dsl = DSL.using(conn);
+        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    menuItem.setId(generatedKeys.getInt(1));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error saving menu item: " + e.getMessage());
-        }
+        dsl.update(MENU_ITEMS)
+                .set(MENU_ITEMS.NAME, item.getName())
+                .set(MENU_ITEMS.DESCRIPTION, item.getDescription())
+                .set(MENU_ITEMS.PRICE, item.getPrice())
+                .set(MENU_ITEMS.IS_AVAILABLE, item.getIsAvailable())
+                .set(MENU_ITEMS.UPDATED_AT, now)
+                .where(MENU_ITEMS.ID.eq(item.getId()))
+                .execute();
+
+        return findById(conn, item.getId());
     }
 
-    public void update(MenuItem menuItem) {
-        String sql = "UPDATE menu_items SET name = ?, price = ?, description = ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, menuItem.getName());
-            pstmt.setDouble(2, menuItem.getPrice());
-            pstmt.setString(3, menuItem.getDescription());
-            pstmt.setInt(4, menuItem.getId());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error updating menu item: " + e.getMessage());
-        }
+    public MenuItems findById(Connection conn, int id) {
+        DSLContext dsl = DSL.using(conn);
+        MenuItemsRecord record = dsl.selectFrom(MENU_ITEMS)
+                .where(MENU_ITEMS.ID.eq(id))
+                .fetchOne();
+        return record != null ? record.into(MenuItems.class) : null;
     }
 
-    public void delete(int id) {
-        String sql = "DELETE FROM menu_items WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error deleting menu item: " + e.getMessage());
-        }
+    public List<MenuItems> findAll(Connection conn) {
+        DSLContext dsl = DSL.using(conn);
+        return dsl.selectFrom(MENU_ITEMS)
+                .orderBy(MENU_ITEMS.NAME.asc())
+                .fetchInto(MenuItems.class);
     }
 
-    public Optional<MenuItem> findById(int id) {
-        String sql = "SELECT id, name, price, description FROM menu_items WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return Optional.of(new MenuItem(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getDouble("price"),
-                    rs.getString("description")
-                ));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error finding menu item by id: " + e.getMessage());
-        }
-        return Optional.empty();
+    public List<MenuItems> findAvailable(Connection conn) {
+        DSLContext dsl = DSL.using(conn);
+        return dsl.selectFrom(MENU_ITEMS)
+                .where(MENU_ITEMS.IS_AVAILABLE.eq(1))
+                .orderBy(MENU_ITEMS.NAME.asc())
+                .fetchInto(MenuItems.class);
     }
 
-    public List<MenuItem> findAll() {
-        List<MenuItem> menuItems = new ArrayList<>();
-        String sql = "SELECT id, name, price, description FROM menu_items";
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                menuItems.add(new MenuItem(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getDouble("price"),
-                    rs.getString("description")
-                ));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error finding all menu items: " + e.getMessage());
-        }
-        return menuItems;
+    public void setAvailability(Connection conn, int itemId, boolean available) {
+        DSLContext dsl = DSL.using(conn);
+        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+
+        dsl.update(MENU_ITEMS)
+                .set(MENU_ITEMS.IS_AVAILABLE, available ? 1 : 0)
+                .set(MENU_ITEMS.UPDATED_AT, now)
+                .where(MENU_ITEMS.ID.eq(itemId))
+                .execute();
+    }
+
+    public void delete(Connection conn, int itemId) {
+        DSLContext dsl = DSL.using(conn);
+        dsl.deleteFrom(MENU_ITEMS)
+                .where(MENU_ITEMS.ID.eq(itemId))
+                .execute();
     }
 }
