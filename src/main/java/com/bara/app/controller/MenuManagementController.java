@@ -1,7 +1,7 @@
 package com.bara.app.controller;
 
 import com.bara.app.model.MenuItem;
-import com.bara.app.repository.MenuItemRepository;
+import com.bara.app.service.MenuItemService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -28,12 +28,12 @@ public class MenuManagementController {
     @FXML
     private TableColumn<MenuItem, String> descriptionColumn;
 
-    private MenuItemRepository menuItemRepository;
+    private MenuItemService menuItemService;
     private ObservableList<MenuItem> menuItemList;
 
     @FXML
     public void initialize() {
-        menuItemRepository = new MenuItemRepository();
+        menuItemService = new MenuItemService();
         menuItemList = FXCollections.observableArrayList();
 
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -49,7 +49,7 @@ public class MenuManagementController {
     }
 
     private void loadMenuItems() {
-        menuItemList.setAll(menuItemRepository.findAll());
+        menuItemList.setAll(menuItemService.findAll());
     }
 
     private void showMenuItemDetails(MenuItem menuItem) {
@@ -75,7 +75,7 @@ public class MenuManagementController {
             }
 
             MenuItem menuItem = new MenuItem(name, price, description);
-            menuItemRepository.save(menuItem);
+            menuItemService.save(menuItem);
             loadMenuItems();
             clearFields();
         } catch (NumberFormatException e) {
@@ -101,7 +101,7 @@ public class MenuManagementController {
                 selectedMenuItem.setPrice(price);
                 selectedMenuItem.setDescription(description);
 
-                menuItemRepository.update(selectedMenuItem);
+                menuItemService.update(selectedMenuItem);
                 loadMenuItems();
                 clearFields();
             } else {
@@ -116,7 +116,7 @@ public class MenuManagementController {
     private void deleteMenuItem() {
         MenuItem selectedMenuItem = menuItemTable.getSelectionModel().getSelectedItem();
         if (selectedMenuItem != null) {
-            menuItemRepository.delete(selectedMenuItem.getId());
+            menuItemService.delete(selectedMenuItem.getId());
             loadMenuItems();
             clearFields();
         } else {

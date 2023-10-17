@@ -3,7 +3,7 @@ package com.bara.app.controller;
 import com.bara.app.BaraAppFX;
 import com.bara.app.model.MenuItem;
 import com.bara.app.model.OrderItem;
-import com.bara.app.repository.MenuItemRepository;
+import com.bara.app.service.MenuItemService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -43,7 +43,7 @@ public class RestaurantPOSController {
     @FXML
     public Label totalLabel;
 
-    private MenuItemRepository menuItemRepository;
+    private MenuItemService menuItemService;
     private ObservableList<OrderItem> currentOrder;
     private boolean shellInitialized = false;
 
@@ -55,7 +55,7 @@ public class RestaurantPOSController {
         }
         shellInitialized = true;
 
-        menuItemRepository = new MenuItemRepository();
+        menuItemService = new MenuItemService();
         currentOrder = FXCollections.observableArrayList();
 
         // Load the default view
@@ -120,7 +120,7 @@ public class RestaurantPOSController {
         // Ensure menuFlowPane is not null, which can happen if the FXML isn't loaded yet.
         if (menuFlowPane == null) return;
         menuFlowPane.getChildren().clear();
-        for (MenuItem item : menuItemRepository.findAll()) {
+        for (MenuItem item : menuItemService.findAll()) {
             Button itemButton = createMenuItemButton(item);
             menuFlowPane.getChildren().add(itemButton);
         }
