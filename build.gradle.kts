@@ -2,6 +2,7 @@ plugins {
     java
     application
     id("org.openjfx.javafxplugin") version "0.0.13" // For JavaFX
+    id("org.flywaydb.flyway") version "9.22.3" // For database migrations
     id("nu.studer.jooq") version "8.2" // For jOOQ code generation
     id("org.jetbrains.kotlin.jvm") version "1.9.23" // Retained for compatibility
 }
@@ -15,7 +16,7 @@ repositories {
 
 dependencies {
     // SQLite JDBC Driver
-    implementation("org.xerial:sqlite-jdbc:3.46.0.0")
+    implementation("org.postgresql:postgresql:42.6.0")
 
     // Flyway for database migrations
     implementation("org.flywaydb:flyway-core:9.22.3")
@@ -26,13 +27,22 @@ dependencies {
     // jOOQ Code Generator (for build-time use)
     jooqGenerator("org.jooq:jooq-codegen:3.18.9")
     jooqGenerator("org.jooq:jooq-meta-extensions:3.18.9")
-    jooqGenerator("org.xerial:sqlite-jdbc:3.46.0.0") // SQLite driver for jOOQ generation
+    jooqGenerator("org.postgresql:postgresql:42.6.0") // PostgreSQL driver for jOOQ generation
     jooqGenerator("org.slf4j:slf4j-simple:1.7.36") // Logging for jOOQ generation
 
 
     // Use JUnit Jupiter for testing.
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+}
+
+// Configure Flyway for database migrations
+flyway {
+    url = "jdbc:postgresql://localhost:5432/bara"
+    user = "devuser"
+    password = "devpass"
+    locations = arrayOf("filesystem:src/main/resources/db/migration")
+    cleanDisabled = false
 }
 
 jooq {
@@ -43,14 +53,16 @@ jooq {
         create("main") {
             jooqConfiguration.apply {
                 jdbc.apply {
-                    driver = "org.sqlite.JDBC"
-                    url = "jdbc:sqlite:bara.db"
+                    driver = "org.postgresql.Driver"
+                    url = "jdbc:postgresql://localhost:5432/bara"
+                    user = "devuser"
+                    password = "devpass"
                 }
                 generator.apply {
                     name = "org.jooq.codegen.DefaultGenerator"
                     database.apply {
-                        name = "org.jooq.meta.sqlite.SQLiteDatabase"
-                        // SQLite doesn't support schemas, so we don't set inputSchema
+                        name = "org.jooq.meta.postgres.PostgresDatabase"
+                        inputSchema = "public"
                         excludes = "flyway_schema_history"
                     }
                     target.apply {
@@ -69,6 +81,11 @@ jooq {
             }
         }
     }
+}
+
+// Make jOOQ code generation depend on Flyway migrations
+tasks.named("generateJooq") {
+    dependsOn(tasks.named("flywayMigrate"))
 }
 
 application {
@@ -93,17 +110,3 @@ javafx {
     modules = listOf("javafx.controls", "javafx.fxml")
 }
 
-// Custom task to run Flyway migrations (no dependencies to avoid circular refs)
-tasks.register<Exec>("migrateFlyway") {
-    group = "database"
-    description = "Run Flyway database migrations using direct SQL execution"
-    commandLine("sh", "-c", """
-        sqlite3 bara.db < src/main/resources/db/migration/V1__create_menu_items.sql && \
-        sqlite3 bara.db < src/main/resources/db/migration/V2__create_customers.sql && \
-        sqlite3 bara.db < src/main/resources/db/migration/V3__create_customer_phones.sql && \
-        sqlite3 bara.db < src/main/resources/db/migration/V4__create_customer_addresses.sql && \
-        sqlite3 bara.db < src/main/resources/db/migration/V5__create_orders.sql && \
-        sqlite3 bara.db < src/main/resources/db/migration/V6__create_unidentified_customer_clusters.sql && \
-        echo 'Migrations applied successfully'
-    """.trimIndent())
-}
