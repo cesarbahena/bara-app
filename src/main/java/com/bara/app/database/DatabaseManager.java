@@ -13,14 +13,16 @@ import java.sql.SQLException;
  */
 public class DatabaseManager {
 
-    private static final String DB_URL = "jdbc:sqlite:bara.db";
+    private static final String DB_URL = "jdbc:postgresql://localhost:5432/bara";
+    private static final String DB_USER = "devuser";
+    private static final String DB_PASS = "devpass";
     private static boolean initialized = false;
 
     /**
-     * Get a connection to the SQLite database.
+     * Get a connection to the PostgreSQL database.
      */
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL);
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
     }
 
     /**
@@ -37,7 +39,7 @@ public class DatabaseManager {
 
             // Configure Flyway
             Flyway flyway = Flyway.configure()
-                    .dataSource(DB_URL, null, null)
+                    .dataSource(DB_URL, DB_USER, DB_PASS)
                     .locations("classpath:db/migration")
                     .baselineOnMigrate(true) // Allow migrating an existing database
                     .validateOnMigrate(true)
