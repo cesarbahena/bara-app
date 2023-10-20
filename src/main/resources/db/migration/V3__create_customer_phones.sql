@@ -2,14 +2,14 @@
 -- Description: Phone numbers associated with customers
 
 CREATE TABLE customer_phones (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL,
     phone_number TEXT NOT NULL,
-    is_primary INTEGER NOT NULL DEFAULT 0 CHECK (is_primary IN (0, 1)), -- 1=primary, 0=secondary
-    is_default_search INTEGER NOT NULL DEFAULT 0 CHECK (is_default_search IN (0, 1)), -- 1=use for search, 0=don't
-    added_date TEXT NOT NULL DEFAULT (datetime('now')),
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE, -- true=primary, false=secondary
+    is_default_search BOOLEAN NOT NULL DEFAULT FALSE, -- true=use for search, false=don't
+    added_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign key to customers
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,

@@ -2,7 +2,7 @@
 -- Description: Advanced address management with validation, geocoding, and duplicate detection
 
 CREATE TABLE customer_addresses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL,
 
     -- Raw user input
@@ -16,7 +16,7 @@ CREATE TABLE customer_addresses (
     country TEXT DEFAULT 'MX',
 
     -- Provider validation data (from geocoding/validation service)
-    formatted_provider_data TEXT, -- JSON with full provider response
+    formatted_provider_data JSONB, -- Full provider response
     latitude REAL,
     longitude REAL,
 
@@ -26,20 +26,20 @@ CREATE TABLE customer_addresses (
     -- Validation workflow
     validation_status TEXT NOT NULL DEFAULT 'pending'
         CHECK (validation_status IN ('pending', 'validated', 'failed', 'partial', 'manual')),
-    validation_metadata TEXT, -- JSON with validation service metadata
-    validation_attempted_at TEXT,
-    validation_completed_at TEXT,
+    validation_metadata JSONB, -- Validation service metadata
+    validation_attempted_at TIMESTAMPTZ,
+    validation_completed_at TIMESTAMPTZ,
 
     -- Address preferences
-    is_default INTEGER NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1)),
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
 
     -- Delivery notes
     delivery_instructions TEXT,
 
     -- Timestamps
-    added_date TEXT NOT NULL DEFAULT (datetime('now')),
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    added_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign key to customers
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE

@@ -2,7 +2,7 @@
 -- Description: Order management with customer tracking, party composition, and pattern recognition
 
 CREATE TABLE orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     customer_id INTEGER,                   -- NULLABLE! (anonymous orders supported)
     cluster_id INTEGER,                    -- Link to unidentified_customer_clusters
     customer_address_id INTEGER,
@@ -15,7 +15,7 @@ CREATE TABLE orders (
 
     -- Party composition (for analytics)
     party_size INTEGER,
-    party_composition TEXT,                -- JSON: [{'age':'40s'},{'age':'40s'},{'age':'10-15'},{'age':'10-15'}]
+    party_composition JSONB,               -- [{'age':'40s'},{'age':'40s'},{'age':'10-15'},{'age':'10-15'}]
 
     -- Context capture (for pattern recognition)
     table_number TEXT,                     -- "14" or "Mesa 14"
@@ -40,7 +40,7 @@ CREATE TABLE orders (
     payment_status TEXT NOT NULL DEFAULT 'unpaid'
         CHECK (payment_status IN ('unpaid', 'paid', 'refunded', 'partial')),
     payment_method TEXT CHECK (payment_method IN ('cash', 'card', 'transfer', 'other')),
-    paid_at TEXT,
+    paid_at TIMESTAMPTZ,
 
     -- Notes
     customer_notes TEXT,
@@ -49,14 +49,14 @@ CREATE TABLE orders (
 
     -- Sync fields (for future cloud integration)
     sync_version INTEGER DEFAULT 1,
-    last_synced_at TEXT,
-    synced_to_cloud INTEGER DEFAULT 0 CHECK (synced_to_cloud IN (0, 1)),
+    last_synced_at TIMESTAMPTZ,
+    synced_to_cloud BOOLEAN NOT NULL DEFAULT FALSE,
     cloud_id TEXT,
 
     -- Timestamps
-    ordered_at TEXT NOT NULL DEFAULT (datetime('now')),
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    ordered_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign keys
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT,
@@ -64,7 +64,7 @@ CREATE TABLE orders (
 );
 
 CREATE TABLE order_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL,
     menu_item_id INTEGER NOT NULL,
 
@@ -80,8 +80,8 @@ CREATE TABLE order_items (
     line_total REAL NOT NULL CHECK (line_total >= 0),
 
     -- Timestamps
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign keys
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
@@ -102,7 +102,7 @@ CREATE INDEX idx_orders_party_pattern ON orders(party_size, day_of_week, time_of
 CREATE INDEX idx_orders_anonymous ON orders(order_name, party_size) WHERE customer_id IS NULL;
 
 -- Sync status
-CREATE INDEX idx_orders_sync_pending ON orders(synced_to_cloud) WHERE synced_to_cloud = 0;
+CREATE INDEX idx_orders_sync_pending ON orders(synced_to_cloud) WHERE synced_to_cloud = false;
 
 -- Indexes for order_items table
 CREATE INDEX idx_order_items_order_id ON order_items(order_id);

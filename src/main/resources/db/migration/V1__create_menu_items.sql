@@ -2,13 +2,13 @@
 -- Description: Core menu items for the POS system
 
 CREATE TABLE menu_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     price REAL NOT NULL CHECK (price >= 0),
     description TEXT,
-    is_available INTEGER NOT NULL DEFAULT 1 CHECK (is_available IN (0, 1)), -- 1=available, 0=86'd
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    is_available BOOLEAN NOT NULL DEFAULT TRUE, -- TRUE=available, FALSE=86'd
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Index for quick name lookups
