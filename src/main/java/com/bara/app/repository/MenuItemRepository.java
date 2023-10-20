@@ -6,26 +6,22 @@ import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
 import java.sql.Connection;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static com.bara.app.db.jooq.Tables.MENU_ITEMS;
 
 public class MenuItemRepository {
 
-    private static final DateTimeFormatter SQLITE_DATETIME_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     public MenuItems create(Connection conn, MenuItems item) {
         DSLContext dsl = DSL.using(conn);
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         MenuItemsRecord record = dsl.newRecord(MENU_ITEMS);
         record.setName(item.getName());
         record.setDescription(item.getDescription());
         record.setPrice(item.getPrice());
-        record.setIsAvailable(item.getIsAvailable() != null ? item.getIsAvailable() : 1);
+        record.setIsAvailable(item.getIsAvailable() != null ? item.getIsAvailable() : true);
         record.setCreatedAt(now);
         record.setUpdatedAt(now);
 
@@ -35,7 +31,7 @@ public class MenuItemRepository {
 
     public MenuItems update(Connection conn, MenuItems item) {
         DSLContext dsl = DSL.using(conn);
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         dsl.update(MENU_ITEMS)
                 .set(MENU_ITEMS.NAME, item.getName())
@@ -67,17 +63,17 @@ public class MenuItemRepository {
     public List<MenuItems> findAvailable(Connection conn) {
         DSLContext dsl = DSL.using(conn);
         return dsl.selectFrom(MENU_ITEMS)
-                .where(MENU_ITEMS.IS_AVAILABLE.eq(1))
+                .where(MENU_ITEMS.IS_AVAILABLE.eq(true))
                 .orderBy(MENU_ITEMS.NAME.asc())
                 .fetchInto(MenuItems.class);
     }
 
     public void setAvailability(Connection conn, int itemId, boolean available) {
         DSLContext dsl = DSL.using(conn);
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         dsl.update(MENU_ITEMS)
-                .set(MENU_ITEMS.IS_AVAILABLE, available ? 1 : 0)
+                .set(MENU_ITEMS.IS_AVAILABLE, available)
                 .set(MENU_ITEMS.UPDATED_AT, now)
                 .where(MENU_ITEMS.ID.eq(itemId))
                 .execute();

@@ -92,7 +92,7 @@ public class MenuItemService {
         pojo.setName(model.getName());
         pojo.setPrice((float) model.getPrice());
         pojo.setDescription(model.getDescription());
-        pojo.setIsAvailable(1);
+        pojo.setIsAvailable(true);
         return pojo;
     }
 }

@@ -7,6 +7,7 @@ import org.jooq.impl.DSL;
 
 import java.sql.Connection;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -14,12 +15,9 @@ import static com.bara.app.db.jooq.Tables.ORDERS;
 
 public class OrderRepository {
 
-    private static final DateTimeFormatter SQLITE_DATETIME_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     public Orders create(Connection conn, Orders order) {
         DSLContext dsl = DSL.using(conn);
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         OrdersRecord record = dsl.newRecord(ORDERS);
         record.setCustomerId(order.getCustomerId());
@@ -46,7 +44,7 @@ public class OrderRepository {
         record.setCreatedAt(now);
         record.setUpdatedAt(now);
         record.setSyncVersion(1);
-        record.setSyncedToCloud(0);
+        record.setSyncedToCloud(false);
 
         record.store();
         return record.into(Orders.class);
@@ -88,7 +86,7 @@ public class OrderRepository {
 
     public Orders updateStatus(Connection conn, int orderId, String status) {
         DSLContext dsl = DSL.using(conn);
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         dsl.update(ORDERS)
                 .set(ORDERS.STATUS, status)
@@ -102,7 +100,7 @@ public class OrderRepository {
 
     public void linkToCustomer(Connection conn, int orderId, int customerId) {
         DSLContext dsl = DSL.using(conn);
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         dsl.update(ORDERS)
                 .set(ORDERS.CUSTOMER_ID, customerId)

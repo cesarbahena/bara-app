@@ -6,8 +6,7 @@ import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
 import java.sql.Connection;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static com.bara.app.db.jooq.Tables.CUSTOMERS;
@@ -16,9 +15,6 @@ import static com.bara.app.db.jooq.Tables.CUSTOMERS;
  * Repository for customer data access using jOOQ.
  */
 public class CustomerRepository {
-
-    private static final DateTimeFormatter SQLITE_DATETIME_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
      * Create a new customer.
@@ -30,7 +26,7 @@ public class CustomerRepository {
     public Customers create(Connection conn, Customers customer) {
         DSLContext dsl = DSL.using(conn);
 
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         CustomersRecord record = dsl.newRecord(CUSTOMERS);
         record.setFirstName(customer.getFirstName());
@@ -43,7 +39,7 @@ public class CustomerRepository {
         record.setCreatedAt(now);
         record.setUpdatedAt(now);
         record.setSyncVersion(1);
-        record.setSyncedToCloud(0);
+        record.setSyncedToCloud(false);
 
         record.store();
         return record.into(Customers.class);
@@ -59,7 +55,7 @@ public class CustomerRepository {
     public Customers update(Connection conn, Customers customer) {
         DSLContext dsl = DSL.using(conn);
 
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         int updated = dsl.update(CUSTOMERS)
                 .set(CUSTOMERS.FIRST_NAME, customer.getFirstName())
@@ -113,7 +109,7 @@ public class CustomerRepository {
      */
     public void markInactive(Connection conn, int customerId) {
         DSLContext dsl = DSL.using(conn);
-        String now = LocalDateTime.now().format(SQLITE_DATETIME_FORMAT);
+        OffsetDateTime now = OffsetDateTime.now();
 
         dsl.update(CUSTOMERS)
                 .set(CUSTOMERS.STATUS, "inactive")
